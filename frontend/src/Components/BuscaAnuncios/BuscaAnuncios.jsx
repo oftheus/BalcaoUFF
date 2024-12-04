@@ -406,47 +406,36 @@ const BuscaAnuncios = () => {
                       )}
                       <strong>Evento Online:</strong>{" "}
                       {ad.events_details.is_online ? "Sim" : "Não"} <br />
-                      {ad.events_details.contact_information && (
+                      {ad.events_details.contact_info && (
                         <>
                           <strong>Contato:</strong> <br />
-                          {ad.events_details.contact_information.phone && (
+                          {ad.events_details.contact_info.phone && (
                             <>
-                              Telefone: +
+                              Telefone:
                               {
-                                ad.events_details.contact_information.phone
-                                  .country_code
+                                ad.events_details.contact_info.phone
                               }
-                              (
-                              {
-                                ad.events_details.contact_information.phone
-                                  .area_code
-                              }
-                              )
-                              {
-                                ad.events_details.contact_information.phone
-                                  .number
-                              }{" "}
                               <br />
                             </>
                           )}
-                          {ad.events_details.contact_information.email && (
+                          {ad.events_details.contact_info.email && (
                             <>
                               Email:{" "}
-                              {ad.events_details.contact_information.email}{" "}
+                              {ad.events_details.contact_info.email}{" "}
                               <br />
                             </>
                           )}
-                          {ad.events_details.contact_information.website && (
+                          {ad.events_details.contact_info.website && (
                             <>
                               Website:{" "}
                               <a
                                 href={
-                                  ad.events_details.contact_information.website
+                                  ad.events_details.contact_info.website
                                 }
                                 target="_blank"
                                 rel="noopener noreferrer"
                               >
-                                {ad.events_details.contact_information.website}
+                                {ad.events_details.contact_info.website}
                               </a>{" "}
                               <br />
                             </>
@@ -523,52 +512,42 @@ const BuscaAnuncios = () => {
                         ).toLocaleDateString()}{" "}
                         <br />
                         <strong>Informações de Contato:</strong> <br />
-                        {ad.job_opportunities_details.contact_information
+                        {ad.job_opportunities_details.contact_info
                           ?.phone && (
                           <>
-                            <strong>Telefone:</strong> +
+                            <strong>Telefone:</strong> 
                             {
-                              ad.job_opportunities_details.contact_information
-                                .phone.country_code
-                            }{" "}
-                            (
-                            {
-                              ad.job_opportunities_details.contact_information
-                                .phone.area_code
+                              ad.job_opportunities_details.contact_info
+                                .phone
                             }
-                            ){" "}
-                            {
-                              ad.job_opportunities_details.contact_information
-                                .phone.number
-                            }{" "}
                             <br />
                           </>
                         )}
-                        {ad.job_opportunities_details.contact_information
+                        {ad.job_opportunities_details.contact_info
                           ?.email && (
                           <>
                             <strong>Email:</strong>{" "}
                             {
-                              ad.job_opportunities_details.contact_information
+                              ad.job_opportunities_details.contact_info
                                 .email
                             }{" "}
                             <br />
                           </>
                         )}
-                        {ad.job_opportunities_details.contact_information
+                        {ad.job_opportunities_details.contact_info
                           ?.website && (
                           <>
                             <strong>Website:</strong>{" "}
                             <a
                               href={
-                                ad.job_opportunities_details.contact_information
+                                ad.job_opportunities_details.contact_info
                                   .website
                               }
                               target="_blank"
                               rel="noopener noreferrer"
                             >
                               {
-                                ad.job_opportunities_details.contact_information
+                                ad.job_opportunities_details.contact_info
                                   .website
                               }
                             </a>{" "}

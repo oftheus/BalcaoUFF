@@ -17,7 +17,7 @@ function SelecionarLoc({ onLocationSelect }) {
     // Adiciona um listener para capturar cliques no mapa
     mapInstance.addListener("click", (event) => {
       const { lat, lng } = event.latLng.toJSON();
-      
+
       // Adiciona ou atualiza o marcador
       if (marker) {
         marker.setPosition(event.latLng);
