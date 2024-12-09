@@ -2,12 +2,14 @@ import React, { useState } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 
 const Chat = () => {
+  // Estado que armazena as conversas existentes
   const [conversations, setConversations] = useState([
     {
       id: 1,
       participant: "João Silva",
       adTitle: "Smartphone Samsung Galaxy S21",
       messages: [
+        // Histórico de mensagens da conversa
         {
           sender: "Você",
           text: "Olá, o produto ainda está disponível?",
@@ -30,24 +32,28 @@ const Chat = () => {
     },
   ]);
 
+  // Estado para controlar a conversa atualmente selecionada
   const [selectedConversation, setSelectedConversation] = useState(
-    conversations[0]
+    conversations[0] // Inicialmente, seleciona a primeira conversa
   );
-  const [newMessage, setNewMessage] = useState("");
+  const [newMessage, setNewMessage] = useState(""); // Estado para armazenar o texto de uma nova mensagem
   const [showModal, setShowModal] = useState(false); // Controle do modal
-  const [newChat, setNewChat] = useState({ email: "", adTitle: "" }); // Dados do novo chat
+  const [newChat, setNewChat] = useState({ email: "", adTitle: "" }); // Estado para armazenar os dados do novo chat a ser criado
 
+  // Função para enviar uma nova mensagem na conversa selecionada
   const handleSendMessage = () => {
     if (newMessage.trim() !== "") {
+      // Atualiza as mensagens da conversa atual com a nova mensagem
       const updatedMessages = [
         ...selectedConversation.messages,
         {
-          sender: "Você",
-          text: newMessage,
-          timestamp: new Date().toLocaleTimeString(),
+          sender: "Você", // Remetente da nova mensagem
+          text: newMessage, // Conteúdo da nova mensagem
+          timestamp: new Date().toLocaleTimeString(), // Horário atual
         },
       ];
 
+      // Atualiza o estado das conversas, garantindo imutabilidade
       setConversations((prev) =>
         prev.map((conv) =>
           conv.id === selectedConversation.id
@@ -56,27 +62,32 @@ const Chat = () => {
         )
       );
 
+      // Atualiza o estado da conversa selecionada
       setSelectedConversation({
         ...selectedConversation,
         messages: updatedMessages,
       });
 
-      setNewMessage(""); // Limpa o campo
+      // Limpa o campo de entrada da mensagem
+      setNewMessage("");
     }
   };
 
+  // Função para criar um novo chat
   const handleNewChat = () => {
     if (newChat.email && newChat.adTitle) {
       const newConversation = {
-        id: conversations.length + 1,
-        participant: newChat.email,
-        adTitle: newChat.adTitle,
-        messages: [],
+        id: conversations.length + 1, // Gera um novo ID para a conversa
+        participant: newChat.email, // Define o participante como o e-mail fornecido
+        adTitle: newChat.adTitle, // Define o título do anúncio
+        messages: [], // Novo chat começa sem mensagens
       };
 
+      // Adiciona a nova conversa à lista existente
       setConversations((prev) => [...prev, newConversation]);
-      setShowModal(false); // Fecha o modal
-      setNewChat({ email: "", adTitle: "" }); // Reseta o formulário
+      // Fecha o modal e reseta os campos de entrada
+      setShowModal(false);
+      setNewChat({ email: "", adTitle: "" });
     }
   };
 
@@ -89,7 +100,7 @@ const Chat = () => {
             Suas Conversas
             <button
               className="btn btn-sm btn-success float-end"
-              onClick={() => setShowModal(true)}
+              onClick={() => setShowModal(true)} // Abre o modal para criar um novo chat
             >
               Iniciar Chat
             </button>
@@ -97,11 +108,11 @@ const Chat = () => {
           <div className="list-group">
             {conversations.map((conversation) => (
               <button
-                key={conversation.id}
+                key={conversation.id} // Chave única para cada conversa
                 className={`list-group-item list-group-item-action ${
-                  selectedConversation.id === conversation.id ? "active" : ""
+                  selectedConversation.id === conversation.id ? "active" : "" // Marca a conversa selecionada
                 }`}
-                onClick={() => setSelectedConversation(conversation)}
+                onClick={() => setSelectedConversation(conversation)} // Define a conversa selecionada
               >
                 <h6 className="mb-1">{conversation.participant}</h6>
                 <p className="mb-1 text-truncate">{conversation.adTitle}</p>
@@ -159,7 +170,7 @@ const Chat = () => {
                 <button
                   type="button"
                   className="btn-close"
-                  onClick={() => setShowModal(false)}
+                  onClick={() => setShowModal(false)} // Fecha o modal
                 ></button>
               </div>
               <div className="modal-body">
