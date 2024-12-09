@@ -2,30 +2,50 @@ import React, { useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import axios from "axios";
 
+// Declaração de estados do React para gerenciar valores dinâmicos
 const BuscaAnuncios = () => {
+
+  // Categoria selecionada pelo usuário
   const [category, setCategory] = useState("");
+
+  // Subcategoria selecionada pelo usuário
   const [subCategory, setSubCategory] = useState("");
+
+  // Lista de anúncios carregados
   const [advertisements, setAdvertisements] = useState([]);
+
+  // Número da página atual
   const [page, setPage] = useState(1);
+
+  // Quantidade de anúncios exibidos por página
   const [pageSize] = useState(6);
+
+  // Total de anúncios disponíveis
   const [total, setTotal] = useState(0);
+
+  // Indicador de carregamento
   const [loading, setLoading] = useState(false);
+
+  // Mensagem de erro, caso ocorra
   const [error, setError] = useState(null);
 
+  // Função para buscar anúncios da API
   const fetchAdvertisements = async () => {
-    setLoading(true);
-    setError(null);
+    setLoading(true); // Ativa o estado de carregamento
+    setError(null); // Reseta possíveis erros anteriores
 
+    // Criação do objeto de parâmetros para a API
     try {
       const params = {
-        Page: page,
-        PageSize: pageSize,
+        Page: page, // Define a página atual
+        PageSize: pageSize, // Define o tamanho da página
       };
 
       // Lógica para decidir qual parâmetro enviar
+      // Verifica se uma subcategoria foi selecionada
       if (subCategory) {
         params.CategoryName = subCategory;
-      } else if (category) {
+      } else if (category) { // Mapeia a categoria selecionada para o tipo esperado pela API
         if (category === "Beleza") {
           params.Type = "beauty";
         } else if (category === "Eletrônicos") {
@@ -41,52 +61,80 @@ const BuscaAnuncios = () => {
         }
       }
 
+      // Chamada à API para obter os anúncios
       const response = await axios.get("http://localhost:5327/advertisements", {
-        params,
+        params, // Envia os parâmetros configurados
       });
+
+      // Atualiza os estados com os dados retornados
+      
+      // Define os anúncios carregados
       setAdvertisements(response.data.data);
+      
+      // Define o total de anúncios disponíveis
       setTotal(response.data.total);
-    } catch (err) {
+
+    } catch (err) { 
       setError("Erro ao buscar anúncios.");
       console.error("Erro na busca:", err);
     }
 
-    setLoading(false);
+    setLoading(false); // Desativa o estado de carregamento
   };
 
+  // useEffect para buscar anúncios automaticamente sempre que `category`, `subCategory` ou `page` mudar
   useEffect(() => {
-    fetchAdvertisements();
-  }, [category, subCategory, page]);
+    fetchAdvertisements(); // Chama a função para buscar anúncios
+  }, [category, subCategory, page]); // Dependências que disparam o useEffect
 
+  
+  // Função para lidar com a mudança de categoria
   const handleCategoryChange = (e) => {
+
+    // Atualiza a categoria selecionada
     setCategory(e.target.value);
+
+    // Atualiza a categoria selecionada
     setSubCategory("");
+
+    // Reseta a página para o início
     setPage(1);
   };
 
+  
+  // Função para lidar com a mudança de subcategoria
   const handleSubCategoryChange = (e) => {
+
+    // Atualiza a subcategoria selecionada
     setSubCategory(e.target.value);
+
+    // Reseta a página para o início
     setPage(1);
   };
 
-  const [selectedOwner, setSelectedOwner] = useState(null);
-  const [showModal, setShowModal] = useState(false);
+  // Estados para gerenciar o anunciante selecionado e a exibição do modal
+  const [selectedOwner, setSelectedOwner] = useState(null); // Detalhes do anunciante selecionado
+  const [showModal, setShowModal] = useState(false); // Controle de exibição do modal
 
+  // Função para tratar o clique em um anúncio
   const handleAdClick = async (ownerId) => {
     try {
+      // Busca os detalhes do anunciante pelo ID
       const ownerDetails = await fetchOwnerDetails(ownerId);
-      setSelectedOwner(ownerDetails);
-      setShowModal(true);
+      setSelectedOwner(ownerDetails); // Salva os detalhes no estado
+      setShowModal(true); // Exibe o modal com os detalhes
     } catch (error) {
       alert("Não foi possível carregar as informações do anunciante.");
     }
   };
 
+  // Função para fechar o modal
   const closeModal = () => {
     setShowModal(false);
     setSelectedOwner(null);
   };
 
+  // Função para buscar os detalhes do anunciante via API
   const fetchOwnerDetails = async (ownerId) => {
     try {
       const response = await axios.get(
@@ -111,8 +159,8 @@ const BuscaAnuncios = () => {
         <select
           className="form-select"
           id="categorySelect"
-          value={category}
-          onChange={handleCategoryChange}
+          value={category} //Valor atual da categoria
+          onChange={handleCategoryChange} //Atualiza o estado da categoria
         >
           <option value="">Todas as Categorias</option>
           <option value="Beleza">Beleza</option>
@@ -133,10 +181,11 @@ const BuscaAnuncios = () => {
           <select
             className="form-select"
             id="subCategorySelect"
-            value={subCategory}
-            onChange={handleSubCategoryChange}
+            value={subCategory} //Valor atual da subcategoria
+            onChange={handleSubCategoryChange} // Atualiza o estado da subcategoria
           >
             <option value="">Todas as Subcategorias</option>
+            {/* Subcategorias específicas de acordo com a categoria selecionada */}
             {category === "Beleza" && (
               <>
                 <option value="makeup">Maquiagem</option>
@@ -189,13 +238,13 @@ const BuscaAnuncios = () => {
       {loading && <p>Carregando...</p>}
       {error && <p className="text-danger">{error}</p>}
 
-      {/* Exibindo os anúncios */}
+      {/* Lista de anúncios exibidos em cards */}
       <div className="row">
         {advertisements.map((ad) => (
           <div className="col-md-4 mb-4" key={ad.id}>
             <div
               className="card h-100 shadow-sm"
-              onClick={() => handleAdClick(ad.owner.id)}
+              onClick={() => handleAdClick(ad.owner.id)} // Ao clicar, carrega detalhes do anunciante
               style={{ cursor: "pointer" }}
             >
               <div className="card-body">
@@ -635,20 +684,27 @@ const BuscaAnuncios = () => {
 
       {/* Controles de Paginação */}
       <div className="d-flex justify-content-between align-items-center my-4">
+        
+        {/* Botão para voltar à página anterior */}
         <button
           className="btn btn-secondary"
-          onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
-          disabled={page === 1}
+          onClick={() => setPage((prev) => Math.max(prev - 1, 1))} // Diminui o número da página, mas não permite valores menores que 1
+          disabled={page === 1} // Desativa o botão quando já está na primeira página
         >
           Anterior
         </button>
+
+        {/* Indicação da página atual */}
         <span>Página {page}</span>
+
+        {/* Botão para avançar para a próxima página */}
         <button
           className="btn btn-secondary"
           onClick={() =>
-            setPage((prev) => (page * pageSize < total ? prev + 1 : prev))
+            // Aumenta o número da página se ainda houver itens restantes
+            setPage((prev) => (page * pageSize < total ? prev + 1 : prev)) 
           }
-          disabled={page * pageSize >= total}
+          disabled={page * pageSize >= total} // Desativa o botão quando não há mais itens para exibir
         >
           Próxima
         </button>
