@@ -3,6 +3,7 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import { useLoadScript, GoogleMap, Marker } from "@react-google-maps/api";
 
 function AdForm() {
+  // Estado inicial do formulário com todos os campos necessários para o anúncio
   const [formData, setFormData] = useState({
     type: "",
     sub_category: "",
@@ -22,33 +23,37 @@ function AdForm() {
     category: "",
   });
 
-  const [toastVisible, setToastVisible] = useState(false); // Estado do toast
-  const [subCategories, setSubCategories] = useState([]);
+  const [toastVisible, setToastVisible] = useState(false); // Estado para controlar a exibição do toast
+  const [subCategories, setSubCategories] = useState([]); // Lista de subcategorias com base na categoria selecionada
 
-  const [mapCenter, setMapCenter] = useState({ lat: -22.8808, lng: -43.1043 });
+  const [mapCenter, setMapCenter] = useState({ lat: -22.8808, lng: -43.1043 }); // Posição inicial do mapa
 
   const { isLoaded } = useLoadScript({
-    googleMapsApiKey: "", // Substitua pela sua chave
+    googleMapsApiKey: "", // Substitua pela sua chave da API do Google Maps
   });
 
-  const [selectedLocation, setSelectedLocation] = useState(null);
+  const [selectedLocation, setSelectedLocation] = useState(null); // Local selecionado no mapa
 
+  // Função chamada ao clicar no mapa
   const handleMapClick = useCallback((event) => {
     const latitude = event.latLng.lat();
     const longitude = event.latLng.lng();
 
+    // Atualiza os campos de latitude e longitude no formulário
     setFormData((prev) => ({
       ...prev,
       latitude: latitude.toString(),
       longitude: longitude.toString(),
     }));
 
-    setSelectedLocation({ lat: latitude, lng: longitude });
+    setSelectedLocation({ lat: latitude, lng: longitude }); // Define a posição do marcador
     setMapCenter({ lat: latitude, lng: longitude }); // Atualiza o centro do mapa
   }, []);
 
+  // Renderiza um texto enquanto o mapa está sendo carregado
   if (!isLoaded) return <div>Carregando mapa...</div>;
 
+  // Função para lidar com mudanças nos campos do formulário
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
 
@@ -76,16 +81,19 @@ function AdForm() {
     };
 
     if (name === "category") {
+      // Atualiza subcategorias ao mudar a categoria
       const subCategoriesForCategory = subCategoryMap[updatedValue] || [];
       setSubCategories(subCategoriesForCategory);
 
+      // Atualiza os campos relacionados à categoria
       setFormData((prev) => ({
         ...prev,
         [name]: updatedValue,
-        type: categoryToTypeMap[updatedValue] || "", // Atualiza automaticamente o tipo
+        type: categoryToTypeMap[updatedValue] || "", // // Define o tipo com base na categoria
         sub_category: "", // Reseta o campo subcategoria ao mudar a categoria
       }));
     } else {
+      // Atualiza o campo alterado
       setFormData((prev) => ({
         ...prev,
         [name]: updatedValue,
@@ -93,9 +101,11 @@ function AdForm() {
     }
   };
 
+  // Função para enviar os dados do formulário
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Estrutura inicial do payload
     const payload = {
       type: formData.type,
       sub_category: formData.sub_category,
@@ -105,6 +115,8 @@ function AdForm() {
         longitude: parseFloat(formData.longitude),
       },
     };
+
+    // Adiciona campos específicos com base na categoria selecionada
 
     if (formData.category === "beleza") {
       payload.beauty_details = {
@@ -220,6 +232,7 @@ function AdForm() {
       };
     }
 
+    // Envia o payload para o servidor
     console.log(JSON.stringify(payload, null, 2));
     try {
       const response = await fetch("http://localhost:5327/advertisements", {
