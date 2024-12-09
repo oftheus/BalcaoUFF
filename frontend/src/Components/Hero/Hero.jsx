@@ -3,6 +3,7 @@ import './Hero.css'
 
 const Hero = () => {
   return (
+    // container-fluid cria um contêiner que ocupa 100% da largura da viewport em todos os tamanhos de tela
     <div className='hero container-fluid'>
       <div className="hero-text">
         <h1>Bem-vindo ao Balcão UFF</h1>
