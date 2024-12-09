@@ -6,12 +6,12 @@ import Destaque from "./Components/Destaque/Destaque";
 import Categorias from "./Components/Categorias/Categorias";
 import Chamada from "./Components/Chamada/Chamada";
 import Rodape from "./Components/Rodape/Rodape";
-import Dashboard from "./Components/Dashboard/Dashboard";
-import Criacao from "./Components/Criacao/Criacao";
-import Perfil from "./Components/Perfil/Perfil";
-import BuscaAnuncios from "./Components/BuscaAnuncios/BuscaAnuncios";
-import MeusAnuncios from "./Components/MeusAnuncios/MeusAnuncios";
-import Chat from "./Components/Chat/Chat";
+import Dashboard from "./Pages/Dashboard/Dashboard";
+import Criacao from "./Pages/Criacao/Criacao";
+import Perfil from "./Pages/Perfil/Perfil";
+import BuscaAnuncios from "./Pages/BuscaAnuncios/BuscaAnuncios";
+import MeusAnuncios from "./Pages/MeusAnuncios/MeusAnuncios";
+import Chat from "./Pages/Chat/Chat";
 
 const App = () => {
   return (
