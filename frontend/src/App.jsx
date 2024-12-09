@@ -13,15 +13,19 @@ import BuscaAnuncios from "./Pages/BuscaAnuncios/BuscaAnuncios";
 import MeusAnuncios from "./Pages/MeusAnuncios/MeusAnuncios";
 import Chat from "./Pages/Chat/Chat";
 
+// Componente principal da aplicação, responsável por gerenciar as rotas.
+// O componente Router fornece o contexto de roteamento para a aplicação.
 const App = () => {
   return (
-    <Router>
+    <Router> 
       <div>
         <Routes>
+          {/* Rota para a página inicial ("/"). */}
           <Route
             path="/"
             element={
               <>
+                {/* Composição de componentes que formam a página inicial. */}
                 <Navbar />
                 <Hero />
                 <Destaque />
@@ -31,6 +35,7 @@ const App = () => {
               </>
             }
           />
+          {/* Rota das demais páginas */}
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/criaranuncios" element={<Criacao />} />
           <Route path="/perfil" element={<Perfil />} />
