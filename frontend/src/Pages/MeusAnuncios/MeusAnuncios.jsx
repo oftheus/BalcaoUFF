@@ -3,28 +3,39 @@ import axios from "axios";
 import "bootstrap/dist/css/bootstrap.min.css";
 
 const MeusAnuncios = () => {
+
+  // Declara o estado para armazenar os anúncios retornados da API.
   const [ads, setAds] = useState([]);
+
+  // Declara o estado para armazenar o anúncio selecionado para exibição em detalhes.
   const [selectedAd, setSelectedAd] = useState(null);
 
+  // useEffect para buscar anúncios da API ao montar o componente.
   useEffect(() => {
     const fetchAds = async () => {
       try {
+        // Faz a requisição à API para obter os anúncios do usuário.
         const response = await axios.get(
           "http://localhost:5327/accounts/account_01JE9FY9Q1XXSETES05957AEZQ/advertisements"
         );
+        // Atualiza o estado com os dados obtidos.
         setAds(response.data.data);
       } catch (error) {
         console.error("Erro ao buscar anúncios:", error);
       }
     };
 
-    fetchAds();
-  }, []);
+    fetchAds(); // Chama a função para buscar os anúncios.
+  }, []); // Chama a função para buscar os anúncios.
 
+
+  // Função chamada ao clicar no botão "Detalhes".
+  // Define o anúncio selecionado para exibir os detalhes.
   const handleDetails = (ad) => {
     setSelectedAd(ad);
   };
 
+  // Função para fechar o modal de detalhes.
   const handleCloseModal = () => {
     setSelectedAd(null);
   };
@@ -43,6 +54,7 @@ const MeusAnuncios = () => {
           </tr>
         </thead>
         <tbody>
+          {/* Itera sobre os anúncios e cria uma linha para cada um */}
           {ads.map((ad) => (
             <tr key={ad.id}>
               <td>{ad.id}</td>
@@ -62,7 +74,7 @@ const MeusAnuncios = () => {
         </tbody>
       </table>
 
-      {/* Modal para exibir os detalhes do anúncio */}
+      {/* Modal para exibir os detalhes do anúncio selecionado */}
       {selectedAd && (
         <div
           className="modal fade show d-block"
@@ -85,6 +97,7 @@ const MeusAnuncios = () => {
                 />
               </div>
               <div className="modal-body">
+                {/* Informações gerais do anúncio */}
                 <p>
                   <strong>ID:</strong> {selectedAd.id}
                 </p>
