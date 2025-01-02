@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 // Declaração de estados do React para gerenciar valores dinâmicos
 const BuscaAnuncios = () => {
-
   // Categoria selecionada pelo usuário
   const [category, setCategory] = useState("");
 
@@ -28,6 +28,11 @@ const BuscaAnuncios = () => {
 
   // Mensagem de erro, caso ocorra
   const [error, setError] = useState(null);
+  const [profile, setProfile] = useState(null);
+  const userApiUrl = `http://localhost:5327/accounts`;
+  const createChatApiUrl = `http://localhost:5327/chats`;
+  const API_URL = "http://localhost:5327/accounts";
+  const navigate = useNavigate();
 
   // Função para buscar anúncios da API
   const fetchAdvertisements = async () => {
@@ -45,7 +50,8 @@ const BuscaAnuncios = () => {
       // Verifica se uma subcategoria foi selecionada
       if (subCategory) {
         params.CategoryName = subCategory;
-      } else if (category) { // Mapeia a categoria selecionada para o tipo esperado pela API
+      } else if (category) {
+        // Mapeia a categoria selecionada para o tipo esperado pela API
         if (category === "Beleza") {
           params.Type = "beauty";
         } else if (category === "Eletrônicos") {
@@ -67,14 +73,13 @@ const BuscaAnuncios = () => {
       });
 
       // Atualiza os estados com os dados retornados
-      
+
       // Define os anúncios carregados
       setAdvertisements(response.data.data);
-      
+
       // Define o total de anúncios disponíveis
       setTotal(response.data.total);
-
-    } catch (err) { 
+    } catch (err) {
       setError("Erro ao buscar anúncios.");
       console.error("Erro na busca:", err);
     }
@@ -87,10 +92,8 @@ const BuscaAnuncios = () => {
     fetchAdvertisements(); // Chama a função para buscar anúncios
   }, [category, subCategory, page]); // Dependências que disparam o useEffect
 
-  
   // Função para lidar com a mudança de categoria
   const handleCategoryChange = (e) => {
-
     // Atualiza a categoria selecionada
     setCategory(e.target.value);
 
@@ -101,10 +104,8 @@ const BuscaAnuncios = () => {
     setPage(1);
   };
 
-  
   // Função para lidar com a mudança de subcategoria
   const handleSubCategoryChange = (e) => {
-
     // Atualiza a subcategoria selecionada
     setSubCategory(e.target.value);
 
@@ -137,13 +138,95 @@ const BuscaAnuncios = () => {
   // Função para buscar os detalhes do anunciante via API
   const fetchOwnerDetails = async (ownerId) => {
     try {
+      const token = localStorage.getItem("AccessToken");
+      if (!token) {
+        console.error("Token não encontrado. Faça login novamente.");
+        return;
+      }
+
       const response = await axios.get(
-        `http://localhost:5327/accounts/${ownerId}`
+        `http://localhost:5327/accounts/${ownerId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`, // Adiciona o Bearer Token no cabeçalho
+          },
+        }
       );
       return response.data;
     } catch (err) {
       console.error("Erro ao buscar detalhes do anunciante:", err);
       throw new Error("Erro ao buscar os detalhes do anunciante.");
+    }
+  };
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const token = localStorage.getItem("AccessToken");
+
+        if (!token) {
+          throw new Error("Token não encontrado. Faça login novamente.");
+        }
+
+        // Faz a requisição GET para obter os dados do perfil do usuário logado
+        const response = await axios.get(API_URL, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        setProfile(response.data); // Atualiza o perfil
+      } catch (err) {
+        console.error("Erro ao carregar o perfil:", err);
+        setError("Erro ao carregar os dados do perfil.");
+      } finally {
+        setLoading(false); // Define que o carregamento terminou
+      }
+    };
+
+    fetchProfile();
+  }, []); // Esse efeito roda uma vez quando o componente é montado
+
+  const handleCreateChat = async (advertisementId) => {
+    // Verifica se o perfil foi carregado
+    if (!profile) {
+      console.error("Perfil não encontrado");
+      return;
+    }
+
+    const accountId = profile.id; // Agora, usamos o ID do usuário logado
+    const AccessToken = localStorage.getItem("AccessToken");
+
+    if (!AccessToken) {
+      console.error("Token de acesso não encontrado no localStorage");
+      return;
+    }
+    // Logando os dados que estão sendo enviados
+    console.log("Criando chat com os seguintes dados:");
+    console.log("account_id:", accountId);
+    console.log("advertisement_id:", advertisementId);
+    console.log("Authorization:", `Bearer ${AccessToken}`);
+    try {
+      // Chamada à API para criar o chat
+      const response = await axios.post(
+        "http://localhost:5327/chats", // Substitua com a URL correta
+        {
+          account_id: accountId, // Usamos o ID do usuário logado
+          advertisement_id: advertisementId, // ID do anúncio com o qual o chat será criado
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${AccessToken}`,
+          },
+        }
+      );
+      console.log("Resposta da API:", response.data);
+      // Sucesso ao criar o chat
+      const { chat_room_id } = response.data;
+      navigate(`/chat-room/${chat_room_id}`);
+    } catch (err) {
+      console.error("Erro ao criar o chat:", err);
+      setError("Falha ao criar a sala de chat. Tente novamente mais tarde.");
     }
   };
 
@@ -248,6 +331,14 @@ const BuscaAnuncios = () => {
               style={{ cursor: "pointer" }}
             >
               <div className="card-body">
+                {ad.images && ad.images.length > 0 && (
+                  <img
+                    src={ad.images[0]} // Exibe a primeira imagem
+                    alt={ad.title}
+                    className="card-img-top"
+                    style={{ height: "200px", objectFit: "cover" }} // Estilo opcional para imagem
+                  />
+                )}
                 {/* Renderizar detalhes dos anúncios de acordo com a subcategoria */}
                 {ad.type === "beauty" && ad.beauty_details && (
                   <div>
@@ -461,16 +552,13 @@ const BuscaAnuncios = () => {
                           {ad.events_details.contact_info.phone && (
                             <>
                               Telefone:
-                              {
-                                ad.events_details.contact_info.phone
-                              }
+                              {ad.events_details.contact_info.phone}
                               <br />
                             </>
                           )}
                           {ad.events_details.contact_info.email && (
                             <>
-                              Email:{" "}
-                              {ad.events_details.contact_info.email}{" "}
+                              Email: {ad.events_details.contact_info.email}{" "}
                               <br />
                             </>
                           )}
@@ -478,9 +566,7 @@ const BuscaAnuncios = () => {
                             <>
                               Website:{" "}
                               <a
-                                href={
-                                  ad.events_details.contact_info.website
-                                }
+                                href={ad.events_details.contact_info.website}
                                 target="_blank"
                                 rel="noopener noreferrer"
                               >
@@ -561,30 +647,21 @@ const BuscaAnuncios = () => {
                         ).toLocaleDateString()}{" "}
                         <br />
                         <strong>Informações de Contato:</strong> <br />
-                        {ad.job_opportunities_details.contact_info
-                          ?.phone && (
+                        {ad.job_opportunities_details.contact_info?.phone && (
                           <>
-                            <strong>Telefone:</strong> 
-                            {
-                              ad.job_opportunities_details.contact_info
-                                .phone
-                            }
+                            <strong>Telefone:</strong>
+                            {ad.job_opportunities_details.contact_info.phone}
                             <br />
                           </>
                         )}
-                        {ad.job_opportunities_details.contact_info
-                          ?.email && (
+                        {ad.job_opportunities_details.contact_info?.email && (
                           <>
                             <strong>Email:</strong>{" "}
-                            {
-                              ad.job_opportunities_details.contact_info
-                                .email
-                            }{" "}
+                            {ad.job_opportunities_details.contact_info.email}{" "}
                             <br />
                           </>
                         )}
-                        {ad.job_opportunities_details.contact_info
-                          ?.website && (
+                        {ad.job_opportunities_details.contact_info?.website && (
                           <>
                             <strong>Website:</strong>{" "}
                             <a
@@ -632,6 +709,18 @@ const BuscaAnuncios = () => {
                       <br />
                     </p>
                   </div>
+                )}
+                {/* Botão para criar chat */}
+                {profile && ad.owner.id !== profile.id && (
+                  <button
+                    className="btn btn-primary"
+                    onClick={(e) => {
+                      e.stopPropagation(); // Evita que o clique no botão dispare o evento do card
+                      handleCreateChat(ad.id);
+                    }}
+                  >
+                    Iniciar Chat
+                  </button>
                 )}
               </div>
               <div className="card-footer text-muted">
@@ -684,7 +773,6 @@ const BuscaAnuncios = () => {
 
       {/* Controles de Paginação */}
       <div className="d-flex justify-content-between align-items-center my-4">
-        
         {/* Botão para voltar à página anterior */}
         <button
           className="btn btn-secondary"
@@ -702,7 +790,7 @@ const BuscaAnuncios = () => {
           className="btn btn-secondary"
           onClick={() =>
             // Aumenta o número da página se ainda houver itens restantes
-            setPage((prev) => (page * pageSize < total ? prev + 1 : prev)) 
+            setPage((prev) => (page * pageSize < total ? prev + 1 : prev))
           }
           disabled={page * pageSize >= total} // Desativa o botão quando não há mais itens para exibir
         >

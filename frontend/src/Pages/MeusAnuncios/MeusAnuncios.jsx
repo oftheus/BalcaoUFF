@@ -1,48 +1,125 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import "bootstrap/dist/css/bootstrap.min.css";
+import { useDropzone } from "react-dropzone";
+import { toast, ToastContainer } from "react-toastify";
 
 const MeusAnuncios = () => {
-
-  // Declara o estado para armazenar os anúncios retornados da API.
   const [ads, setAds] = useState([]);
-
-  // Declara o estado para armazenar o anúncio selecionado para exibição em detalhes.
   const [selectedAd, setSelectedAd] = useState(null);
+  const [accountId, setAccountId] = useState(null);
 
-  // useEffect para buscar anúncios da API ao montar o componente.
+  const { getRootProps, getInputProps } = useDropzone({
+    onDrop: (acceptedFiles) => handleUploadImages(acceptedFiles),
+  });
+
   useEffect(() => {
     const fetchAds = async () => {
       try {
-        // Faz a requisição à API para obter os anúncios do usuário.
-        const response = await axios.get(
-          "http://localhost:5327/accounts/account_01JE9FY9Q1XXSETES05957AEZQ/advertisements"
+        const token = localStorage.getItem("AccessToken");
+        if (!token) {
+          console.error("Token não encontrado. Faça login novamente.");
+          return;
+        }
+
+        const accountResponse = await fetch("http://localhost:5327/accounts", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!accountResponse.ok) {
+          console.error("Erro ao buscar conta:", accountResponse.status);
+          return;
+        }
+
+        const accountData = await accountResponse.json();
+        const accountId = accountData?.id;
+        if (!accountId) {
+          console.error("ID da conta não encontrado.");
+          return;
+        }
+
+        setAccountId(accountId);
+
+        // Busca os anúncios
+        const adsResponse = await axios.get(
+          `http://localhost:5327/accounts/${accountId}/advertisements`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
         );
-        // Atualiza o estado com os dados obtidos.
-        setAds(response.data.data);
+        setAds(adsResponse.data.data);
       } catch (error) {
         console.error("Erro ao buscar anúncios:", error);
       }
     };
 
-    fetchAds(); // Chama a função para buscar os anúncios.
-  }, []); // Chama a função para buscar os anúncios.
+    fetchAds();
+  }, []);
 
-
-  // Função chamada ao clicar no botão "Detalhes".
-  // Define o anúncio selecionado para exibir os detalhes.
   const handleDetails = (ad) => {
-    setSelectedAd(ad);
+    setSelectedAd(ad); // Atualiza o anúncio selecionado
   };
 
-  // Função para fechar o modal de detalhes.
   const handleCloseModal = () => {
     setSelectedAd(null);
+  };
+
+  // Função para fazer o upload das imagens
+  const handleUploadImages = async (files) => {
+    if (files.length === 0 || !selectedAd) {
+      console.error("Selecione um anúncio e tente novamente.");
+      return;
+    }
+
+    const adId = selectedAd?.id; // Usa o ID do anúncio selecionado
+    if (!adId) {
+      console.error("Anúncio não encontrado.");
+      return;
+    }
+
+    const token = localStorage.getItem("AccessToken");
+    if (!token) {
+      console.error("Token não encontrado.");
+      return;
+    }
+
+    try {
+      // Requisição para obter a URL pré-assinada
+      const response = await axios({
+        method: "PATCH",
+        url: `http://localhost:5327/advertisements/${adId}/presign-url/${files[0].name}`,
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "X-Impersonate": accountId,
+        },
+      });
+
+      const presignedUrl = response.data.signed_url;
+
+      // Realiza o upload do arquivo usando a URL pré-assinada
+      await axios.put(presignedUrl, files[0], {
+        headers: {
+          "Content-Type": files[0].type,
+        },
+      });
+
+      console.log("Imagem carregada com sucesso!");
+      toast.success("Imagem carregada com sucesso!");
+    } catch (error) {
+      console.error("Erro ao fazer o upload da imagem:", error);
+    }
   };
 
   return (
     <div className="container mt-5">
       <h2>Meus Anúncios</h2>
+      <ToastContainer />
       <table className="table table-striped">
         <thead>
           <tr>
@@ -54,7 +131,6 @@ const MeusAnuncios = () => {
           </tr>
         </thead>
         <tbody>
-          {/* Itera sobre os anúncios e cria uma linha para cada um */}
           {ads.map((ad) => (
             <tr key={ad.id}>
               <td>{ad.id}</td>
@@ -64,7 +140,7 @@ const MeusAnuncios = () => {
               <td>
                 <button
                   className="btn btn-primary btn-sm"
-                  onClick={() => handleDetails(ad)}
+                  onClick={() => handleDetails(ad)} // Atualiza o anúncio selecionado
                 >
                   Detalhes
                 </button>
@@ -97,7 +173,6 @@ const MeusAnuncios = () => {
                 />
               </div>
               <div className="modal-body">
-                {/* Informações gerais do anúncio */}
                 <p>
                   <strong>ID:</strong> {selectedAd.id}
                 </p>
@@ -114,38 +189,15 @@ const MeusAnuncios = () => {
                   <strong>Expira em:</strong>{" "}
                   {new Date(selectedAd.expires_at).toLocaleString()}
                 </p>
-                <p>
-                  <strong>Endereço:</strong>{" "}
-                  {`${selectedAd.address.neighborhood}, ${selectedAd.address.city}, ${selectedAd.address.state}, ${selectedAd.address.country}`}
-                </p>
-                <p>
-                  <strong>CEP:</strong> {selectedAd.address.zip_code}
-                </p>
-                <p>
-                  <strong>Criado em:</strong>{" "}
-                  {new Date(selectedAd.created_at).toLocaleString()}
-                </p>
-                <p>
-                  <strong>Atualizado em:</strong>{" "}
-                  {new Date(selectedAd.updated_at).toLocaleString()}
-                </p>
-                {selectedAd.beauty_details && (
-                  <>
-                    <h6>Detalhes de Beleza:</h6>
-                    <p>
-                      <strong>Marca:</strong> {selectedAd.beauty_details.brand}
-                    </p>
-                    <p>
-                      <strong>Descrição:</strong>{" "}
-                      {selectedAd.beauty_details.description}
-                    </p>
-                    <p>
-                      <strong>Preço:</strong> R${" "}
-                      {selectedAd.beauty_details.price}
-                    </p>
-                  </>
-                )}
-                {/* Adicionar mais detalhes específicos de cada tipo de anúncio conforme necessário */}
+
+                {/* Campo de upload dentro da modal */}
+                <div
+                  {...getRootProps()}
+                  className="border-dashed border-2 p-4 rounded mt-3"
+                >
+                  <input {...getInputProps()} />
+                  <p>Arraste e solte a imagem ou clique para selecionar</p>
+                </div>
               </div>
               <div className="modal-footer">
                 <button

@@ -235,24 +235,53 @@ function AdForm() {
     // Envia o payload para o servidor
     console.log(JSON.stringify(payload, null, 2));
     try {
-      const response = await fetch("http://localhost:5327/advertisements", {
+      const token = localStorage.getItem("AccessToken");
+      if (!token) {
+        console.error("Token não encontrado. Faça login novamente.");
+        return;
+      }
+
+      // 1. Faz a chamada ao endpoint GET /accounts para obter o ID da conta
+      const accountResponse = await fetch("http://localhost:5327/accounts", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!accountResponse.ok) {
+        console.error("Erro ao buscar conta:", accountResponse.status);
+        return;
+      }
+
+      const accountData = await accountResponse.json();
+      const accountId = accountData?.id; // Ajuste conforme a estrutura do JSON retornado
+      if (!accountId) {
+        console.error("ID da conta não encontrado na resposta.");
+        return;
+      }
+
+      // 2. Faz a chamada ao endpoint POST /advertisements com o ID e o token
+      const adResponse = await fetch("http://localhost:5327/advertisements", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-Impersonate": "account_01JE9FY9Q1XXSETES05957AEZQ",
+          Authorization: `Bearer ${token}`,
+          "X-Impersonate": accountId,
         },
         body: JSON.stringify(payload),
       });
 
-      if (response.ok) {
+      if (adResponse.ok) {
         console.log("Anúncio cadastrado com sucesso!");
         setToastVisible(true); // Exibe o toast
         setTimeout(() => setToastVisible(false), 3000); // Esconde após 3 segundos
       } else {
-        console.error("Erro ao cadastrar anúncio");
+        console.error("Erro ao cadastrar anúncio:", adResponse.status);
       }
     } catch (error) {
-      console.error("Erro na requisição:", error);
+      console.error("Erro ao processar requisição:", error.message);
     }
   };
 

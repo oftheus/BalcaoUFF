@@ -4,42 +4,51 @@ import axios from "axios";
 import { Container, Row, Col, Card, Spinner } from "react-bootstrap";
 
 const Perfil = () => {
-  // Estado para armazenar os dados do perfil retornados pela API.
-  const [profile, setProfile] = useState(null);
+  const [profile, setProfile] = useState(null); // Estado para armazenar o perfil
+  const [loading, setLoading] = useState(true); // Estado para indicar carregamento
+  const [error, setError] = useState(null); // Estado para mensagens de erro
 
-  // Estado para indicar se os dados estão sendo carregados.
-  const [loading, setLoading] = useState(true);
+  // URL da API para buscar os dados do perfil
+  const API_URL = "http://localhost:5327/accounts";
 
-  // Estado para armazenar mensagens de erro, caso ocorram.
-  const [error, setError] = useState(null);
-
-  // ID do usuário usado para buscar os dados do perfil.
-  const hardcodedId = "account_01JE9FY9Q1XXSETES05957AEZQ";
-
-  // URL da API para buscar os dados do perfil do usuário.
-  const API_URL = `http://localhost:5327/accounts/${hardcodedId}`;
-
-  // useEffect é utilizado para buscar os dados do perfil assim que o componente é montado.
+  // useEffect para buscar os dados do perfil
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        // Faz uma requisição GET à API para buscar os dados do perfil.
-        const response = await axios.get(API_URL);
-        // Atualiza o estado do perfil com os dados recebidos.
+        const token = localStorage.getItem("AccessToken");
+        console.log("Token no Perfil:", token);
+
+        if (!token) {
+          throw new Error("Token não encontrado. Faça login novamente.");
+        }
+
+        // Faz a requisição GET com o Bearer Token
+        const response = await axios.get(API_URL, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        // Atualiza o estado do perfil com os dados recebidos
+        console.log("Resposta da API:", response.data);
         setProfile(response.data);
+        
       } catch (err) {
-        // Atualiza o estado de erro caso a requisição falhe.
-        setError("Erro ao carregar os dados do perfil.");
+        // Atualiza o estado de erro caso a requisição falhe
+        console.error("Erro na requisição:", err);
+        setError(
+          err.response?.data?.message || "Erro ao carregar os dados do perfil."
+        );
       } finally {
-        // Define que o carregamento terminou, independente de sucesso ou erro.
+        // Define que o carregamento terminou
         setLoading(false);
       }
     };
 
-    fetchProfile(); // Chama a função para buscar os dados.
-  }, [API_URL]); // Dependência para evitar que a URL seja recalculada.
+    fetchProfile(); // Chama a função para buscar os dados
+  }, [API_URL]);
 
-  if (loading) { // Exibe um spinner de carregamento enquanto os dados ainda estão sendo buscados.
+  if (loading) {
     return (
       <Container className="text-center mt-5">
         <Spinner animation="border" />
@@ -48,7 +57,6 @@ const Perfil = () => {
     );
   }
 
-  // Exibe uma mensagem de erro caso a busca dos dados falhe.
   if (error) {
     return (
       <Container className="text-center mt-5">
@@ -57,12 +65,10 @@ const Perfil = () => {
     );
   }
 
-  // Retorna o conteúdo do perfil quando os dados foram carregados com sucesso.
   return (
     <Container className="mt-5">
       <Row className="justify-content-center">
         <Col md={6}>
-          {/* Componente do Bootstrap para exibir os dados em um cartão */}
           <Card>
             <Card.Body>
               <Card.Title>Perfil</Card.Title>

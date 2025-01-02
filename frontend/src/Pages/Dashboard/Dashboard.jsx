@@ -75,7 +75,7 @@ const Dashboard = () => {
       <Row>
         <Card
           className="dashboard-card"
-          onClick={() => handleNavigation("/chat")} // Navega para a rota de chat.
+          onClick={() => handleNavigation("/chats")} // Navega para a rota de chat.
         >
           <Card.Body>
             <Card.Title>Comunicação</Card.Title>
