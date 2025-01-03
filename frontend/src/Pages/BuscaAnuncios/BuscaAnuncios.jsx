@@ -754,7 +754,7 @@ const BuscaAnuncios = () => {
                   <strong>Email:</strong> {selectedOwner.email}
                 </p>
                 <p>
-                  <strong>Reputação:</strong> {selectedOwner.rating}
+                  <strong>Reputação:</strong> {selectedOwner.rating.rating}
                 </p>
               </div>
               <div className="modal-footer">

@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import "bootstrap/dist/css/bootstrap.min.css";
+import { ToastContainer, toast } from "react-toastify";
 import { useDropzone } from "react-dropzone";
-import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const MeusAnuncios = () => {
   const [ads, setAds] = useState([]);
+  const [interestedAds, setInterestedAds] = useState([]);
   const [selectedAd, setSelectedAd] = useState(null);
   const [accountId, setAccountId] = useState(null);
 
@@ -54,8 +55,20 @@ const MeusAnuncios = () => {
           }
         );
         setAds(adsResponse.data.data);
+
+        // Busca os anúncios de interesse
+        const interestedAdsResponse = await axios.get(
+          `http://localhost:5327/accounts/${accountId}/advertisements/interested`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        setInterestedAds(interestedAdsResponse.data.data);
       } catch (error) {
         console.error("Erro ao buscar anúncios:", error);
+        toast.error("Erro ao carregar os dados.");
       }
     };
 
@@ -66,18 +79,77 @@ const MeusAnuncios = () => {
     setSelectedAd(ad); // Atualiza o anúncio selecionado
   };
 
+  const handleFinishAd = async (adId) => {
+    try {
+      const token = localStorage.getItem("AccessToken");
+      if (!token) {
+        toast.error("Token não encontrado. Faça login novamente.");
+        return;
+      }
+
+      // Faz a requisição DELETE para finalizar o anúncio
+      await axios.delete(`http://localhost:5327/advertisements/${adId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "X-Impersonate": accountId,
+        },
+      });
+
+      // Atualiza o status do anúncio localmente
+      setAds((prevAds) =>
+        prevAds.map((ad) =>
+          ad.id === adId ? { ...ad, status: "finished" } : ad
+        )
+      );
+      toast.success("Anúncio finalizado com sucesso!");
+    } catch (error) {
+      console.error("Erro ao finalizar anúncio:", error);
+      toast.error("Erro ao finalizar o anúncio.");
+    }
+  };
+
   const handleCloseModal = () => {
     setSelectedAd(null);
   };
 
-  // Função para fazer o upload das imagens
+  const handleRateAdOwner = async (adId, rating) => {
+    try {
+      const token = localStorage.getItem("AccessToken");
+      if (typeof adId !== "string" || !adId) {
+        toast.error("ID do anúncio inválido.");
+        return;
+      }
+
+      if (rating < 0 || rating > 5) {
+        toast.error("Avaliação deve ser entre 0 e 5.");
+        return;
+      }
+
+      await axios.patch(
+        `http://localhost:5327/advertisements/${adId}/rating`,
+        { rating },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "X-Impersonate": accountId,
+          },
+        }
+      );
+
+      toast.success("Avaliação enviada com sucesso!");
+    } catch (error) {
+      console.error("Erro ao enviar a avaliação:", error);
+      toast.error("Erro ao enviar a avaliação.");
+    }
+  };
+
   const handleUploadImages = async (files) => {
     if (files.length === 0 || !selectedAd) {
       console.error("Selecione um anúncio e tente novamente.");
       return;
     }
 
-    const adId = selectedAd?.id; // Usa o ID do anúncio selecionado
+    const adId = selectedAd?.id;
     if (!adId) {
       console.error("Anúncio não encontrado.");
       return;
@@ -90,26 +162,24 @@ const MeusAnuncios = () => {
     }
 
     try {
-      // Requisição para obter a URL pré-assinada
-      const response = await axios({
-        method: "PATCH",
-        url: `http://localhost:5327/advertisements/${adId}/presign-url/${files[0].name}`,
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "X-Impersonate": accountId,
-        },
-      });
+      const response = await axios.patch(
+        `http://localhost:5327/advertisements/${adId}/presign-url/${files[0].name}`,
+        null,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "X-Impersonate": accountId,
+          },
+        }
+      );
 
       const presignedUrl = response.data.signed_url;
-
-      // Realiza o upload do arquivo usando a URL pré-assinada
       await axios.put(presignedUrl, files[0], {
         headers: {
           "Content-Type": files[0].type,
         },
       });
 
-      console.log("Imagem carregada com sucesso!");
       toast.success("Imagem carregada com sucesso!");
     } catch (error) {
       console.error("Erro ao fazer o upload da imagem:", error);
@@ -139,18 +209,68 @@ const MeusAnuncios = () => {
               <td>{ad.status}</td>
               <td>
                 <button
-                  className="btn btn-primary btn-sm"
-                  onClick={() => handleDetails(ad)} // Atualiza o anúncio selecionado
+                  className="btn btn-primary btn-sm me-2"
+                  onClick={() => handleDetails(ad)}
                 >
                   Detalhes
                 </button>
+                {ad.status !== "finished" && (
+                  <button
+                    className="btn btn-danger btn-sm"
+                    onClick={() => handleFinishAd(ad.id)}
+                  >
+                    Finalizar
+                  </button>
+                )}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <h2>Anúncios de Interesse</h2>
+      <table className="table table-striped">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Tipo</th>
+            <th>Categoria</th>
+            <th>Status</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          {interestedAds.map((ad) => (
+            <tr key={ad.id}>
+              <td>{ad.id}</td>
+              <td>{ad.type}</td>
+              <td>{ad.category}</td>
+              <td>{ad.status}</td>
+              <td>
+                <button
+                  className="btn btn-primary btn-sm me-2"
+                  onClick={() => handleDetails(ad)}
+                >
+                  Detalhes
+                </button>
+                {ad.status === "finished" && (
+                  <button
+                    className="btn btn-success btn-sm"
+                    onClick={() => {
+                      const rating = parseFloat(
+                        prompt("Informe uma avaliação (0 a 5):")
+                      );
+                      handleRateAdOwner(ad.id, rating);
+                    }}
+                  >
+                    Avaliar
+                  </button>
+                )}
               </td>
             </tr>
           ))}
         </tbody>
       </table>
 
-      {/* Modal para exibir os detalhes do anúncio selecionado */}
       {selectedAd && (
         <div
           className="modal fade show d-block"
@@ -190,14 +310,16 @@ const MeusAnuncios = () => {
                   {new Date(selectedAd.expires_at).toLocaleString()}
                 </p>
 
-                {/* Campo de upload dentro da modal */}
-                <div
-                  {...getRootProps()}
-                  className="border-dashed border-2 p-4 rounded mt-3"
-                >
-                  <input {...getInputProps()} />
-                  <p>Arraste e solte a imagem ou clique para selecionar</p>
-                </div>
+                {/* Exibe o campo de upload apenas para Meus Anúncios */}
+                {ads.some((ad) => ad.id === selectedAd.id) && (
+                  <div
+                    {...getRootProps()}
+                    className="border-dashed border-2 p-4 rounded mt-3"
+                  >
+                    <input {...getInputProps()} />
+                    <p>Arraste e solte a imagem ou clique para selecionar</p>
+                  </div>
+                )}
               </div>
               <div className="modal-footer">
                 <button

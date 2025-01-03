@@ -85,7 +85,7 @@ const Perfil = () => {
                 <strong>Descrição:</strong> {profile.description}
               </Card.Text>
               <Card.Text>
-                <strong>Reputação:</strong> {profile.rating}
+                <strong>Reputação:</strong> {profile.rating.rating}
               </Card.Text>
               <Card.Text>
                 <strong>Criado em:</strong>{" "}

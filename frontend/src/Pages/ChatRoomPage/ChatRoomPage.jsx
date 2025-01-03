@@ -119,7 +119,7 @@ export default function ChatRoomPage() {
     <div className="container py-5">
       <div className="row justify-content-center">
         <div className="col-md-8">
-          <h1 className="text-center mb-4">Chat Room</h1>
+          <h1 className="text-center mb-4">Sala de Bate-papo</h1>
           <div className="card shadow-sm mb-4">
             <div className="card-body overflow-auto" style={{ height: "400px" }}>
               {messages.map((msg, index) => (
@@ -156,7 +156,7 @@ export default function ChatRoomPage() {
               className="form-control"
             />
             <button onClick={sendMessage} className="btn btn-primary">
-              Send
+              Enviar
             </button>
           </div>
         </div>

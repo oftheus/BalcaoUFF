@@ -67,7 +67,7 @@ const ChatApp = ({ advertisementId, userId }) => {
 
   return (
     <div>
-      <h1>Chat Room</h1>
+      <h1>Sala de Bate-papo</h1>
       <div>
         {messages.length > 0 ? (
           <ul>
