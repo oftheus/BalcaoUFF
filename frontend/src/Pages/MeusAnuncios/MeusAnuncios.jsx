@@ -239,35 +239,37 @@ const MeusAnuncios = () => {
           </tr>
         </thead>
         <tbody>
-          {interestedAds.map((ad) => (
-            <tr key={ad.id}>
-              <td>{ad.id}</td>
-              <td>{ad.type}</td>
-              <td>{ad.category}</td>
-              <td>{ad.status}</td>
-              <td>
-                <button
-                  className="btn btn-primary btn-sm me-2"
-                  onClick={() => handleDetails(ad)}
-                >
-                  Detalhes
-                </button>
-                {ad.status === "finished" && (
+          {interestedAds
+            .filter((ad) => ad.status === "finished") // Filtra os anúncios com status "finished"
+            .map((ad) => (
+              <tr key={ad.id}>
+                <td>{ad.id}</td>
+                <td>{ad.type}</td>
+                <td>{ad.category}</td>
+                <td>{ad.status}</td>
+                <td>
                   <button
-                    className="btn btn-success btn-sm"
-                    onClick={() => {
-                      const rating = parseFloat(
-                        prompt("Informe uma avaliação (0 a 5):")
-                      );
-                      handleRateAdOwner(ad.id, rating);
-                    }}
+                    className="btn btn-primary btn-sm me-2"
+                    onClick={() => handleDetails(ad)}
                   >
-                    Avaliar
+                    Detalhes
                   </button>
-                )}
-              </td>
-            </tr>
-          ))}
+                  {ad.status === "finished" && (
+                    <button
+                      className="btn btn-success btn-sm"
+                      onClick={() => {
+                        const rating = parseFloat(
+                          prompt("Informe uma avaliação (0 a 5):")
+                        );
+                        handleRateAdOwner(ad.id, rating);
+                      }}
+                    >
+                      Avaliar
+                    </button>
+                  )}
+                </td>
+              </tr>
+            ))}
         </tbody>
       </table>
 
